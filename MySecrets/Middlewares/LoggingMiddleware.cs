@@ -26,19 +26,19 @@ namespace MySecrets.Middlewares
             var stopwatch = new Stopwatch();
             var requestUrl = context.Request.GetDisplayUrl();
 
-            using (_logger.BeginScope("Request ID: {requestId}", Guid.NewGuid()))
+            using (_logger.BeginScope("Request ID: {requestId}", context.TraceIdentifier))
             {
-                stopwatch.Start();
-
                 try
                 {
+                    stopwatch.Start();
+
                     await _next(context);
 
                     stopwatch.Stop();
 
                     if (stopwatch.Elapsed > options.Value.AcceptableExecutionTime)
                     {
-                        _logger.LogWarning("The request handling took too much time. Request URL: {requestUrl}", requestUrl);
+                        _logger.LogWarning("The request handling took too much time. Request URL: {requestUrl}, method: {method}", requestUrl, context.Request.Method);
                     }
                 }
                 catch (Exception ex)

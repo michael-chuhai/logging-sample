@@ -1,6 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using MySecrets.Data.Entities;
@@ -39,16 +41,21 @@ namespace MySecrets.Pages.Secrets
 
             if (!ModelState.IsValid)
             {
-                _logger.LogInformation("Posted secret wasn't valid.");
+                var errors = ModelState
+                    .Where(kvp => kvp.Value.ValidationState == ModelValidationState.Invalid)
+                    .Select(kvp => new {FieldName = kvp.Key, Errors = kvp.Value.Errors.Select(e => e.ErrorMessage)})
+                    .ToList();
+
+                _logger.LogWarning("Posted secret wasn't valid. Errors: {@validationErrors}", errors);
 
                 return Page();
             }
 
             _logger.LogInformation("Creating secret...");
 
-            await _secretService.CreateAsync(Secret);
+            var createdSecret = await _secretService.CreateAsync(Secret);
 
-            _logger.LogInformation("The secret is successfully created.");
+            _logger.LogInformation("The secret #{secretId} is successfully created.", createdSecret.Id);
 
             return RedirectToPage("./Index");
         }

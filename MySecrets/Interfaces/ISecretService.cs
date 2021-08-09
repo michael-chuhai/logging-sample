@@ -12,7 +12,7 @@ namespace MySecrets.Interfaces
 
         Task UpdateAsync(Secret secret);
 
-        Task CreateAsync(Secret secret);
+        Task<Secret> CreateAsync(Secret secret);
 
         Task DeleteAsync(int id);
     }

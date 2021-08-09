@@ -69,27 +69,27 @@ namespace MySecrets.Implementations
             }
             catch (DbUpdateConcurrencyException ex)
             {
-                _logger.LogError(ex, "Failed to update the Secret #{secretId} due to exception.", secret.Id);
-
                 if (!SecretExists(secret.Id))
                 {
-                    _logger.LogDebug("The secret isn't found. Ignoring the error.");
+                    _logger.LogDebug(ex, "There was a concurrency exception. Due to the secret isn't found, we're ignoring the exception.");
 
                     return;
                 }
 
-                _logger.LogDebug("Concurrency error. Throwing.");
+                _logger.LogError(ex, "Failed to update the secret due to concurrency error.");
 
                 throw;
             }
         }
 
-        public async Task CreateAsync(Secret secret)
+        public async Task<Secret> CreateAsync(Secret secret)
         {
             secret.UserId = _userService.CurrentUser.Id;
 
             _context.Secrets.Add(secret);
             await _context.SaveChangesAsync();
+
+            return secret;
         }
 
         public async Task DeleteAsync(int id)
